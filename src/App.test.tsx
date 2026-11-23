@@ -3,6 +3,24 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import App from './App'
 
+import { vi } from 'vitest'
+
+vi.mock('./lib/supabase', () => ({
+  supabase: {
+    auth: {
+      onAuthStateChange: vi.fn(() => ({
+        data: {
+          subscription: {
+            unsubscribe: vi.fn(),
+          },
+        },
+      })),
+      signInWithPassword: vi.fn(),
+      signOut: vi.fn(),
+    },
+  },
+}))
+
 describe('App', () => {
   it('renderiza las secciones principales del portafolio', () => {
     render(
