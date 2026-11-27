@@ -1,56 +1,79 @@
 
+import { useEffect, useState } from 'react'
 import { Code2, Mail, Send } from 'lucide-react'
 
-const contactMethods = [
-  {
-    name: 'Correo electrónico',
-    value: 'edwinjavierpabonrodriguez@gmail.com',
-    href: 'mailto:edwinjavierpabonrodriguez@gmail.com',
-    icon: Mail,
-  },
-  {
-    name: 'LinkedIn',
-    value: 'Conectemos profesionalmente',
-    href: 'https://www.linkedin.com/in/edwin-javier-pabon-rodriguez/',
-    icon: Code2,
-  },
-  {
-    name: 'GitHub',
-    value: 'Conoce mis proyectos',
-    href: 'https://github.com/Edwin335',
-    icon: Code2,
-  },
-]
+import { getPortfolioContent } from '../../services/portfolioContentService'
+import type { ContactMethod } from '../../types/portfolioContent'
 
 function Contact() {
+  const [content, setContent] = useState<{
+    eyebrow: string
+    title: string
+    description: string
+    methods: ContactMethod[]
+  } | null>(null)
+
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadContent() {
+      try {
+        const data = await getPortfolioContent()
+
+        setContent({
+          eyebrow: data.contact_eyebrow,
+          title: data.contact_title,
+          description: data.contact_description,
+          methods: data.contact_methods,
+        })
+      } catch (error) {
+        console.error('Error al cargar Contacto:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadContent()
+  }, [])
+
+  if (loading) {
+    return (
+      <section id="contacto" className="bg-[#080812] px-6 py-24">
+        <div className="mx-auto max-w-5xl text-center text-gray-400">
+          Cargando contacto...
+        </div>
+      </section>
+    )
+  }
+
+  if (!content) return null
+
   return (
     <section id="contacto" className="bg-[#080812] px-6 py-24">
       <div className="mx-auto max-w-5xl">
         <div className="mb-14 text-center">
           <span className="text-sm font-semibold uppercase tracking-widest text-violet-400">
-            Hablemos
+            {content.eyebrow}
           </span>
 
           <h2 className="mt-3 text-4xl font-bold text-white">
-            ¿Trabajamos <span className="text-violet-400">juntos?</span>
+            {content.title}
           </h2>
 
           <p className="mx-auto mt-4 max-w-2xl text-gray-400">
-            Estoy abierto a nuevas oportunidades, proyectos y colaboraciones.
-            Si tienes una propuesta o simplemente quieres conversar, estaré
-            encantado de escucharte.
+            {content.description}
           </p>
         </div>
 
         <div className="grid gap-5 md:grid-cols-3">
-          {contactMethods.map((method) => {
-            const Icon = method.icon
+          {content.methods.map((method, index) => {
+            const Icon = index === 0 ? Mail : Code2
 
             return (
               <a
-                key={method.name}
+                key={method.id}
                 href={method.href}
-                target={method.name === 'Correo electrónico' ? undefined : '_blank'}
+                target={method.href.startsWith('mailto:') ? undefined : '_blank'}
                 rel="noopener noreferrer"
                 className="group rounded-2xl border border-white/10 bg-white/[0.03] p-7 transition duration-300 hover:-translate-y-1 hover:border-violet-500/50 hover:bg-violet-500/5"
               >
